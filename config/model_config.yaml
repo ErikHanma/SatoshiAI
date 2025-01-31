@@ -1,0 +1,4 @@
+prophet:
+  growth: "linear"
+  seasonality_mode: "additive"
+  holidays_prior_scale: 10
