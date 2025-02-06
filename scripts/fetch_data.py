@@ -15,6 +15,7 @@ def fetch_historical_data(symbol: str = "BTC-USD", interval: str = "1d"):
     # Сохранение сырых данных
     raw_path = os.path.join("data", "raw", f"{symbol}_raw.csv")
     df.to_csv(raw_path)
+    print(f"Raw data saved to {raw_path}")
     return df
 
 if __name__ == "__main__":

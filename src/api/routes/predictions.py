@@ -1,19 +1,28 @@
-from fastapi import APIRouter
-from datetime import datetime, timedelta
-import pandas as pd
-import joblib
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import JSONResponse
+from src.models.predict import get_prediction
+import matplotlib.pyplot as plt
+import io
+import base64
 
 router = APIRouter()
 
-@router.post("/predict")
-async def predict(future_hours: int = 24):
-    # Загрузка модели
-    model = joblib.load("model_weights/prophet_model.pkl")
+@router.get("/predict")
+async def predict(currency: str = Query(..., description="Название криптовалюты, например, BTC")):
+    if not currency:
+        raise HTTPException(status_code=400, detail="Currency parameter is missing")
     
-    # Создание датафрейма для прогноза
-    future = model.make_future_dataframe(periods=future_hours, freq="H")
-    future["volume"] = 10000
+    prediction_data = get_prediction(currency)
     
-    # Прогноз
-    forecast = model.predict(future)
-    return forecast[["ds", "yhat"]].tail(future_hours).to_dict()
+    fig, ax = plt.subplots()
+    ax.plot(prediction_data['dates'], prediction_data['values'], label='Forecast')
+    ax.set_title(f'Forecast for {currency}')
+    ax.legend()
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+    plt.close(fig)
+    
+    return JSONResponse(content={'currency': currency, 'chart': image_base64})
