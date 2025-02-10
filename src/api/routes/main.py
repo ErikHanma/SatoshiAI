@@ -1,17 +1,17 @@
-from fastapi import APIRouter
-from src.models.predict import make_prediction
-from flask import Blueprint, render_template
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from fastapi import APIRouter, Request
+
+app = FastAPI()
 
 router = APIRouter()
 
-main_bp = Blueprint('main', __name__)
+templates = Jinja2Templates(directory="src/api/templates")
 
-@main_bp.route('/')
-def home():
-    return render_template('index.html')
-
-@router.get("/predict")
-async def predict(periods: int = 24):
-    return make_prediction(periods)
+@router.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
+app.include_router(router)
